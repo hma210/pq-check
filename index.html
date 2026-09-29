@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1a1814">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PQ Check">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PQ Check</title>
+<style>
+:root{--bg:#f2ede4;--card:#fbf8f1;--ink:#1a1815;--mut:#6b655b;--ok:#1f7a4d;--okb:#e3f1e8;--wn:#a86a00;--wnb:#f8ecd2;--no:#b3261e;--nob:#f9e2df;--ln:#e4ddd0}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}
+main{max-width:640px;margin:0 auto;padding:20px 16px 60px}
+.top{display:flex;justify-content:space-between;align-items:flex-start}
+.eyebrow{font:12px ui-monospace,Menlo,monospace;letter-spacing:.14em;color:var(--mut)}
+h1{font:400 38px Georgia,'Times New Roman',serif;margin:2px 0 10px}
+.ib{background:none;border:0;font-size:22px;cursor:pointer;padding:4px 8px;color:var(--ink)}
+.lead{color:var(--mut);margin:0 0 10px}
+.meta{font-size:13px;color:var(--mut);margin-bottom:18px}
+.sb{width:100%;padding:16px 18px;font-size:17px;border:1px solid var(--ln);border-radius:16px;background:var(--card);outline:none;color:var(--ink)}
+.sb:focus{border-color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 0}
+.chip{border:1px solid var(--ln);background:var(--card);border-radius:999px;padding:9px 16px;font-size:15px;font-weight:600;cursor:pointer;color:var(--ink)}
+.chips.s .chip{font-size:13px;padding:7px 13px;color:var(--mut)}
+.chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+h2{font-size:12px;letter-spacing:.12em;color:var(--mut);margin:26px 0 10px;text-transform:uppercase}
+ol{color:var(--mut);padding-left:20px}
+.card{background:var(--card);border:1px solid var(--ln);border-radius:14px;padding:14px 16px;margin:12px 0}
+.st{display:inline-block;font-size:12px;font-weight:700;border-radius:6px;padding:2px 8px;margin-bottom:6px}
+.ok .st{background:var(--okb);color:var(--ok)}.ok{border-left:5px solid var(--ok)}
+.maybe .st{background:var(--wnb);color:var(--wn)}.maybe{border-left:5px solid var(--wn)}
+.no{background:var(--nob);border-color:var(--no);color:var(--no)}
+.card h3{margin:0 0 2px;font-size:17px;line-height:1.3}
+.sm{font-size:13px;color:var(--mut);margin:2px 0}
+details{margin-top:8px;font-size:13px}summary{cursor:pointer;color:var(--mut)}
+.codes{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.codes span{font:12px ui-monospace,Menlo,monospace;background:#efe9dc;border-radius:5px;padding:2px 6px}
+.codes .hit{background:var(--ok);color:#fff}
+.sv{float:right;background:none;border:1px solid var(--ln);border-radius:8px;padding:4px 10px;cursor:pointer;font-size:13px;color:var(--ink)}
+.sv.on{background:var(--ink);color:#fff}
+.info{background:var(--card);border:1px solid var(--ln);border-radius:12px;padding:12px 16px;font-size:14px;color:var(--mut);margin-top:12px}
+[hidden]{display:none!important}
+</style></head><body><main>
+<div class="top"><div><div class="eyebrow">FIELD LOOKUP · OFFLINE</div><h1>PQ Check</h1></div>
+<div><button class="ib" id="inf" title="About">ⓘ</button><button class="ib" id="svb" title="Saved">🔖</button></div></div>
+<p class="lead">Type a brand name, manufacturer or disease to see if the kit is on the WHO prequalified IVD list. The list is stored in this file.</p>
+<div class="info" id="ip" hidden>Source: WHO Prequalification IVD list (CSV export), snapshot 28 Sep 2026. Search matches brand name, manufacturer and disease only, so confirm the exact product name and version on the kit against the result. "Not found" means not on this WHO list, not that a kit is unsafe or unapproved nationally. The list changes over time; re-check on the WHO site when online.</div>
+<div class="meta" id="meta"></div>
+<input class="sb" id="q" type="search" placeholder="Brand, manufacturer, or disease" autocomplete="off" autocapitalize="off" spellcheck="false">
+<div class="chips" id="c1"></div><div class="chips s" id="c2"></div>
+<div id="out"></div>
+</main>
+<script>
+const M=["Abbott Molecular Inc.","Abbott GmbH","ABON Biopharm (Hangzhou)","Bioneer Corporation","InTec Products, Inc.","Advy Chemical Pvt Ltd.","Beijing Wantai Biological Pharmacy","Hologic, Inc.","Beckman Coulter Life Sciences (Blue Ocean Biomedical)","Sedia Biosciences Corporation","Becton, Dickinson and Company","Rapigen, Inc.","Abbott Diagnostics Korea Inc.","QIAGEN GmbH","Abbott Rapid Diagnostics Jena GmbH","Roche Molecular Systems, Inc.","Roche Diagnostics GmbH","Sysmex Partec GmbH","Abbott Diagnostics Medical Co., Ltd.","Eiken Chemical Co., Ltd.","SD Biosensor, Inc.","ACON Biotech (Hangzhou)","Cepheid AB","Guangzhou Wondfo Biotech","OraSure Technologies, Inc.","Premier Medical Corporation Pvt Ltd","Trinity Biotech Manufacturing Ltd","Orchid Biomedical Systems (Tulip Diagnostics)","AccuBio Ltd","Zephyr Biomedicals (Tulip Diagnostics)","Bio-Rad","Chembio Diagnostic Systems, Inc.","Atomo Diagnostics Ltd","bioLytical Laboratories Inc.","Fujirebio Europe NV","Shanghai Kehua Bio-engineering","RPC Diagnostic Systems, Ltd.","MP Biomedicals Asia Pacific","DiaSorin S.p.A - UK Branch","Arkray Healthcare Pvt Ltd"];
+const RAW=`13641-013-00|Determine Syphilis Advanced|18|SYP|L|2026|7D3442SET;7D3441SET;7D3443;7D3443SET;7D3442;7D3441
+10304-118-00|cobas MTB-RIF/INH|16|TB|N|2026|09040617190
+10306-118-00|cobas MTB|16|TB|N|2026|09040579190
+13193-160-00|BIOCREDIT Malaria Ag Pf (pLDH/HRPII)|11|MAL|L|2026|C13RHG25;C13RHH25
+13194-160-00|BIOCREDIT Malaria Ag Pf/Pv (pLDH/pLDH)|11|MAL|L|2026|C61RHG25;C61RHH25
+13192-160-00|BIOCREDIT Malaria Ag Pf (pLDH)|11|MAL|L|2026|C14RHG25;C14RHH25
+10307-04545-00|Loopamp MTBC Detection Kit|19|TB|N|2025|972000
+12369-117-00|STANDARD Q COVID-19 Ag Test|20|COV|L|2025|09COV33D;10COVC11;09COV32D;09COV31D;09COV30D
+12343-021-00|Flowflex SARS-CoV-2 Antigen Rapid Test (Self-Testing)|21|COV|L|2025|L031-13095;L031-13025;L031-13035;L031-13085;L031-13045;L031-13055;L031-13065;L031-13075
+0633-078-00|Aptima HPV Assay|7|HPV|N|2025|302929;303093;302554
+0634-078-00|Aptima HPV 16 18/45 Genotype Assay|7|HPV|N|2025|303236;303235
+10308-070-00|Xpert MTB/XDR|22|TB|N|2025|GXMTB/XDR-10
+12411-10176-00|BD Onclarity HPV Assay for the BD COR System|10|HPV|N|2025|443982
+12315-10176-00|BD Onclarity HPV Assay for the BD Viper LT System|10|HPV|N|2025|442946
+0372-017-01|ADVANCED QUALITY HIV Self-Test|4|HIV|L|2025|ITPW02155-TC1
+13226-013-00|Determine Antenatal Care Panel|18|HBV/HIV/SYP|L|2025|CPK-038
+0661-265-00|Asante HIV-1/2 Oral Fluid Test|9|HIV|L|2025|1502-100
+0544-005-00|HIV Self Test by Urine (colloidal gold)|6|HIV|L|2025|WZ-1001;WZ-1010;WZ-1050
+09308-027-00|Alinity m HR HPV|0|HPV|N|2025|09N15-090;09N15-080;09N15-092
+0581-117-00|STANDARD G6PD Test|20|OTH|O|2024|02G6S11A;02G6S11
+10295-070-00|Xpert MTB/RIF Ultra|22|TB|N|2024|GXMTB-ULTRA-HB-50;GXMTB-ULTRA-HB-10
+0454-140-00|Accupower HIV-1 Quantitative RT-PCR|3|HIV|N|2024|HIV-1111 (ROW version)
+0651-004-00|Wondfo Malaria P.f (HRP2/pLDH) Test|23|MAL|L|2024|W037P0035;W037P0037;W037P0028;W037P0033;W037P0030;W037P0024;W037P0022
+0466-046-00|cobas 4800 HPV Test|15|HPV|N|2024|05235898190;05235880190;05235871190;05235863190;05235855190;05235839190;05235812190;05235910190;05235901190
+0691-070-00|Xpert HIV-1 Viral Load XC|22|HIV|N|2024|GXHIV-VL-XC-CE-10
+0244-055-01|OraQuick Hepatitis C Self-Test|24|HCV|L|2024|3001-3217.###;7X4-2001.###;7X4-1001.###;7X4-1000.###
+0244-055-00|OraQuick HCV Rapid Antibody Test Kit|24|HCV|L|2024|1001-0274;1001-0270
+0640-027-00|Alinity m HIV-1|0|HIV|N|2024|08N45-090
+0626-017-00|ONE STEP Malaria (Pf) Test|4|MAL|L|2024|ITPW11247-TC25;ITPW11007-TC25;ITPW11007-TC40;ITPW11247-TC40
+0627-017-00|ONE STEP Malaria (Pf/Pv) Tri-line Test|4|MAL|L|2024|ITPW11009-TC25;ITPW11009-TC40;TPW11249-TC25;ITPW11249-TC40
+0652-070-00|Xpert HIV-1 Qual XC|22|HIV|N|2024|GXHIV-QA-XC-CE-10
+0469-010-00|First Response HCV Card Test|25|HCV|L|2023|PI03FRC50;PI03FRC25;PI03FRC100
+0528-046-00|cobas HIV-1/HIV-2 Qualitative (cobas 6800/8800; 5800/6800/8800)|15|HIV|N|2023|09040528190;7862113190
+0387-051-00|HCV Hepatitis C Virus Rapid Test Device (WB/Serum/Plasma)|2|HCV|L|2023|IHC-402WA;IHC-402WB;IHC-402WC;IHC-402WD
+0468-046-00|cobas HPV|15|HPV|N|2023|6997503190;6997511190;6997538190;6997546190;7002238190;7460171190;7460155190
+0485-013-00|Determine Syphilis TP|18|SYP|L|2022|7D2452;7D2453;7D2453SET
+0453-070-00|Xpert HCV VL Fingerstick|22|HCV|N|2022|GXHCV-FS-CE-10
+0480-032-00|Panbio HIV Verification Test (former Maxure HIV-1/2)|14|HIV|L|2022|29011-W20;29011AW20
+0710-118-00|cobas HIV-1 NAT for cobas 4800 System|16|HIV|N|2022|08792992190
+0357-004-01|Wondfo HIV Self-Test|23|HIV|L|2022|W006P0058;W006P0059;W006P0079;W006P0060
+0481-032-00|CheckNOW HIV Self Test|14|HIV|L|2022|29012-W01
+0473-052-00|TrinScreen HIV|26|HIV|L|2022|5551100
+0465-046-00|cobas HCV (Quantitative, cobas 6800/8800)|15|HCV|N|2021|6997732190
+0471-010-00|First Response Syphilis Anti-TP Card Test|25|SYP|L|2021|PI08FRC25;PI08FRC50;PI08FRC100
+0365-046-00|cobas HIV-1 Quantitative (cobas 5800/6800/8800)|15|HIV|N|2020|09040803190;07000995190
+0321-024-00|Paracheck Pf Rapid Test for P. falciparum (Ver. 3)|27|MAL|L|2020|302030010;302030025(1T);302030100;302030025;302030005
+0384-077-00|VISITECT CD4 Advanced Disease|28|HIV|L|2020|AB376
+0383-117-00|STANDARD Q HIV 1/2 Ab 3-Line Test|20|HIV|L|2020|09HIV30DM;09HIV30D
+0290-025-00|FalciVax Rapid test for Malaria Pv/Pf|29|MAL|L|2020|503010050;503010100;503010025(1T);503010025;503010010
+0291-025-00|Parascreen Rapid test for Malaria Pan/Pf|29|MAL|L|2020|503030100;503030050;503030025;503030010;503030025(1T)
+0382-117-00|STANDARD Q HIV/Syphilis Combo Test|20|HIV/SYP|L|2020|09HIV20D
+0347-117-00|STANDARD Q Malaria P.f/Pan Ag Test|20|MAL|L|2020|09MAL30D
+0348-117-00|STANDARD Q Malaria P.f/P.v Ag Test|20|MAL|L|2020|09MAL20D
+0461-027-00|Alinity m HCV|0|HCV|N|2020|08N50-70;08N50-090;08N50-080
+0346-117-00|STANDARD Q Malaria P.f Ag Test|20|MAL|L|2020|09MAL10D
+0360-117-00|STANDARD Q HCV Ab Test|20|HCV|L|2020|09HCV10D
+0229-031-00|Monolisa HCV Ag-Ab ULTRA V2|30|HCV|E|2020|72562;72561
+0450-027-00|Abbott RealTime HCV|0|HCV|N|2019|4J86-70;4J86-80;4J86-90
+0054-006-01|Surecheck HIV Self-Test|31|HIV|O|2019|60-9508-0
+0455-180-00|Abbott RealTime High Risk HPV|1|HPV|N|2019|02N09-092;02N09-080
+0363-010-00|First Response HIV 1-2.O Card test Version 2.0|25|HIV|L|2019|PI05FRC60;PI05FRC50;PI05FRC30;PI05FRC25s;PI05FRC25;PI05FRC10s;PI05FRC100
+0451-013-00|Determine HBsAg 2|18|HBV|L|2019|7D2943;7D2942;7D2943 SET
+0320-090-00|Mylan HIV Self Test|32|HIV|L|2019|ARST001-03-XX;ARST001-03-03;ARST001-03-02;ARST001-03-01;ARST001-03
+0364-010-00|First Response HIV1+2/Syphilis Combo Card Test|25|HIV/SYP|L|2019|I20FRC100;I20FRC25;I20FRC30;I20FRC60;I20FRC50
+0371-017-00|Rapid Anti-HCV Test|4|HCV|O|2019|ITPW01233-TC40;ITPW01232-TC40;ITPW01152-TC40;ITPW01153-TC40;ITPW01233-TC25;ITPW01253-TC40;ITPW01232-TC25;ITPW01253-TC25;ITPW01152-TC25
+0372-017-00|ONE STEP Anti-HIV (1&2) Test|4|HIV|L|2019|ITPW02153-TC40SA;ITPW02231-TC40;ITPW02232-TC40;ITPW02231-TC25;ITPW02152-TC25;ITPW02152-TC40;ITPW02153-TC40;ITPW02154-TC40
+0345-101-00|AdvDx Malaria Pf Rapid Malaria Ag Detection Test|5|MAL|L|2019|00-DKMRK-MALADX-004-050;00-DKMRK-MALADX-004-025;00-DKM-RK-MALADX-004-001;00-DKMRK-MALADX-004-010;00-DKM-RK-MALADX-004-001-25;00-DKM-RK-MALADX-004-001-010
+0349-012-00|NxTek Eliminate Malaria Pf and NxTek Malaria Pf|12|MAL|L|2019|05FK143;05FK144;05FK142;05FK141;05FK140
+0359-032-00|m-PIMA HIV-1/2 VL|14|HIV|N|2019|27015-W50
+0297-012-00|Bioline Malaria Ag P.f/P.f/P.v|12|MAL|L|2018|05FK120;05FK123
+0285-010-00|First Response Malaria Ag. pLDH/HRP2 Combo Card Test|25|MAL|L|2018|PI16FRC25;PI16FRC25s;PI16FRC30;PI16FRC05;PI16FRC10;PI16FRC10s
+0329-010-00|First Response Malaria Ag. P.f./P.v. Card Test|25|MAL|L|2018|PI19FRC30;PI19FRC25s;PI19FRC25;PI19FRC10s;PI19FRC05;PI19FRC10
+0283-010-00|First Response Malaria Antigen P. falciparum (HRP2) Card Test|25|MAL|L|2018|PI13FRC10;PI13FRC05;PI13FRC30;PI13FRC25s;PI13FRC25;PI13FRC10s
+0002-002-01|Insti HIV Self Test|33|HIV|O|2018|90-1071
+0357-004-00|One Step HIV1/2 Whole Blood/Serum/Plasma Test|23|HIV|L|2018|W006-P0049;W006-P0050;W006-P0051;W006-P0052;W006-P0048;W006-P0047;W006-P0046;W006-P0045;W006-C4P2-F;W006-C4P2
+0350-081-00|CyFlow Counter System with CD4 easy count kit and CD4% easy count kit|17|HIV|F|2018|CY-S-3023;05-8401;05-8405;05-8410;05-8411
+0085-028-00|careHPV Test|13|HPV|N|2018|614015
+0201-073-00|INNOTEST HCV Ab IV|34|HCV|E|2018|80330;80068
+0219-012-00|Bioline HBsAg WB|12|HBV|L|2017|01FK10W
+0236-078-00|Aptima HIV-1 Quant Dx Assay|7|HIV|N|2017|PRD-03003;PRD-03002;PRD-03001;PRD-03000;303095;303014
+0268-070-00|Xpert HPV|22|HPV|N|2017|GXHPV-CE-10
+0159-055-01|Oraquick HIV Self Test|24|HIV|L|2017|5X4-7000.200;5X4-1000.###;5X4-1001.###;5X4-2001.###;5X4-0004.###
+0260-070-00|Xpert HCV Viral Load (GeneXpert Dx, Infinity-48s, Infinity-80)|22|HCV|N|2017|GXHCV-VL-CE-10
+0181-031-00|Geenius HIV 1/2 Confirmatory Assay|30|HIV|L|2017|72329;72460
+0267-037-00|Diagnostic Kit for HIV(1+2) Antibody (Colloidal Gold) V2|35|HIV|L|2016|A-GOLD-01;KH-R-02;KH-R-03;R-401-50-C-2;R-401-50-C-3
+0257-012-00|Bioline HCV|12|HCV|L|2016|02FK17;02FK16;02FK10
+0243-013-00|Determine HIV Early Detect|18|HIV|L|2016|7D2842;7D2843;7D2843SET
+0226-032-00|m-PIMA HIV-1/2 Detect|14|HIV|N|2016|270110050;27030R001
+0053-006-00|DPP HIV 1/2 Assay|31|HIV|L|2016|65-9506-0
+0210-006-00|DPP HIV 1/2 Assay (oral fluid)|31|HIV|L|2016|65-9500-1
+0120-038-00|DS-EIA-HBsAg-0.01 (EIA for HBsAg detection and confirmation)|36|HBV|E|2016|B-1256/1.2;B-1255/1.2;B-231/1.2;B-1254/1.2;B-1252/1.2
+0159-055-00|OraQuick HIV 1/2 Rapid Antibody Test|24|HIV|L|2016|5X4-0015;5X4-0010;5X4-0012;5X4-0014;5X4-0062
+0198-071-00|MP Diagnostics HIV Blot 2.2|37|HIV|O|2016|11030-018;11030-036
+0006-005-00|AiD anti-HIV 1+2 ELISA|6|HIV|E|2016|WI-4396;WI-43480
+0005-005-00|Rapid Test for Antibody to HIV (Colloidal Gold Device)|6|HIV|L|2016|WJ-1810;WJ-1850;WJ-1810E;WJ-1850E;WJ-1850EL;WJ-1810EL;WJ-18S10EL;WJ18S50ELC;WJ-18S10ELC;WJ-18S50EL
+0156-053-00|Aquios CL flow cytometer|8|HIV|F|2015|B30166;B23502;B23533;B23534;B23535;B23536;B23538;B25697;B25698;B25700;B39101;B39102
+0179-012-00|Bioline HIV/Syphilis Duo|12|HIV/SYP|L|2015|06FK30;06FK37;06FK35
+0125-012-00|Bioline Malaria Ag P.f/P.v|12|MAL|L|2015|05FK82;05FK81;05FK86;05FK83;05FK80
+0209-012-00|Bioline Malaria Ag P.f (HRP2/pLDH)|12|MAL|L|2015|05FK93;05FK90;05FK92;05FK91
+0202-073-00|INNO-Lia HCV Score|34|HCV|E|2015|80538
+0106-038-00|DS-EIA-HIV-AGAB-SCREEN|36|HIV|E|2015|I-1656/1.2;I-1654/1.2;I-1652/1.2
+0203-073-00|INNO-Lia HIV I/II Score|34|HIV|E|2015|80540
+0144-043-00|Murex HIV Ag/Ab Combination|38|HIV|E|2015|7G79-11;7G79-09
+0221-118-00|COBAS AmpliPrep/TaqMan HIV-1 Qualitative v2.0 (TaqMan 48)|16|HIV|N|2014|3516440001;3279332001;28127387001;3587797190;5807875001;6693083190;6989861190;3051315001
+0200-118-00|COBAS AmpliPrep/TaqMan HIV-1 Qualitative v2.0 (TaqMan 96)|16|HIV|N|2014|5807875001;3516440001;3051315001;28127387001;3587797190;6989861190;3121453001;6693083190
+0054-006-00|SURE CHECK HIV 1/2 Assay|31|HIV|L|2014|HIV201(60-9527-0)
+0121-043-00|Murex HBsAg Version 3 with Confirmatory Version 3|38|HBV|E|2014|2G27-01;9F80-01;9F80-05
+0062-023-00|ParaHIT f Ver. 1.0 Rapid Test for P. falciparum|39|MAL|L|2014|55IC116-25;55IC116-50;55IC116-10;55IC104-50;55IC104-10;55IC104-25
+0141-051-00|ABON HIV 1/2/O Tri-Line Rapid Test Device (WB/Serum/Plasma)|2|HIV|L|2014|IHI-T402WA;IHI-T402WB;IHIT402WI;IHI-T402WF;IHIT402WE;IHI-T402WD;IHI-T402WG
+0002-002-00|INSTI HIV-1/HIV-2 Antibody Test|33|HIV|O|2013|90-1022;90-1038;90-1021;90-1064;90-1013;90-1010
+0030-012-01|Bioline Malaria Ag P.f/Pan|12|MAL|L|2013|05FK61;05FK60;05FK63;05FK62;05FK67
+0084-027-00|Abbott RealTime HIV-1 Qualitative (m2000sp)|0|HIV|N|2013|4N66-66;4N66-80;4N66-90;6K12-24;9K14-02;9K15-01;4N66-01
+0151-027-00|Abbott RealTime HIV-1 Qualitative (Manual)|0|HIV|N|2013|4N66-01;4N66-66;4N66-80;4N66-90;6K12-24;9K15-01
+0027-012-00|Bioline HIV1/2 3.0|12|HIV|L|2013|03FK10;03FK16;03FK17;03FK22
+0096-031-00|Genscreen ULTRA HIV Ag-Ab|30|HIV|E|2013|72386;72388
+0149-052-00|Uni-Gold HIV|26|HIV|L|2012|1206502E;1206502N;1206502
+0126-046-00|COBAS AmpliPrep/TaqMan HIV-1 Test v2.0 (TaqMan 48)|15|HIV|N|2012|3587797109;5212294190
+0147-046-00|COBAS AmpliPrep/TaqMan HIV-1 Test v2.0 (TaqMan 96)|15|HIV|N|2012|07347308001;03587797190;03121453001;03051315001;028127387001;05212294190;05527503001;05807875001
+0007-006-00|HIV 1/2 STAT-PAK|31|HIV|L|2012|HIV101
+0033-013-00|Determine HIV-1/2|18|HIV|L|2011|7D2343SETS;7D2343SET;7D2342;7D2243
+0099-032-00|Pima CD4 test|14|HIV|F|2011|260100100;260300003;260100025
+0146-027-00|Abbott RealTime HIV-1 (manual)|0|HIV|N|2011|1L68-09;04J70-24;2G31-66;2G31-70;2G31-80;2G31-90;4J71-93;9K15-01
+0145-027-00|Abbott RealTime HIV-1 (m2000sp)|0|HIV|N|2011|02G31-010;9K15-01;9K14-02;4J71-93;2G31-90;2G31-80;2G31-70;2G31-66;1L68-09;04J70-24
+0083-027-00|Abbott RealTime HIV-1 (m24sp)|0|HIV|N|2011|2G31-90;2G31-80;2G31-70
+0031-012-01|Bioline Malaria Ag P.f|12|MAL|L|2010|05FK50;05FK53;05FK51;05FK52`;
+const PL={HIV:'HIV',MAL:'Malaria',HCV:'HCV',HBV:'HBV',HPV:'HPV',TB:'TB',SYP:'Syphilis',COV:'COVID-19',OTH:'G6PD'};
+const FL={L:'Lateral flow',N:'NAT',E:'EIA',F:'Flow cytometry',O:'Other'};
+const SY={TB:'tuberculosis mtb mtbc',MAL:'malaria',SYP:'syphilis',COV:'covid sars-cov-2 covid-19',HBV:'hepatitis b',HCV:'hepatitis c',HPV:'human papillomavirus cervical',OTH:'glucose'};
+const N=s=>s.toUpperCase().replace(/[^A-Z0-9#]/g,'');
+const P=RAW.split('\n').map(l=>{const[id,n,m,p,f,y,c]=l.split('|');const cs=[...new Set(c.split(';'))];
+return{id,n,m:M[+m],p,f,y,c:cs,cn:cs.map(N),nn:N(n+' '+M[+m]),ii:N(id),low:(n+' '+M[+m]+' '+p.split('/').map(x=>PL[x]+' '+(SY[x]||'')).join(' ')+' '+FL[f]+(/^bioline/i.test(n)?' sd bioline':'')).toLowerCase(),nm:n.toLowerCase()}});
+const eq=(c,q)=>c===q||(c.includes('#')&&c.length===q.length&&[...c].every((h,i)=>h==='#'||h===q[i]));
+const E=s=>s.replace(/[&<>"]/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[x]));
+let saved=new Set(),fp=null,ff=null,showSaved=false;
+try{saved=new Set(JSON.parse(localStorage.getItem('pqsaved')||'[]'))}catch(e){}
+const persist=()=>{try{localStorage.setItem('pqsaved',JSON.stringify([...saved]))}catch(e){}};
+const $=i=>document.getElementById(i);
+$('meta').textContent=`${P.length} products · snapshot 28 Sep 2026`;
+const mk=(el,items,get,set,cur)=>{el.innerHTML=items.map(([k,l])=>`<button class="chip${get()===k?' on':''}" data-k="${k}">${l}</button>`).join('')};
+function chips(){
+mk($('c1'),Object.entries(PL).filter(e=>e[0]!='OTH'),()=>fp);
+mk($('c2'),Object.entries(FL),()=>ff);
+$('svb').style.opacity=showSaved?1:.6;$('svb').textContent='🔖'+(saved.size?saved.size:'');}
+function card(p){
+return `<div class="card ok"><button class="sv${saved.has(p.id)?' on':''}" data-id="${p.id}">${saved.has(p.id)?'Saved':'Save'}</button>
+<span class="st">✓ WHO PREQUALIFIED</span><h3>${E(p.n)}</h3><p class="sm">${E(p.m)}</p>
+<p class="sm">${p.p.split('/').map(x=>PL[x]).join(', ')} · ${FL[p.f]} · PQ ${p.y} · WHO ID ${p.id}</p></div>`}
+function render(){
+chips();const raw=$('q').value.trim(),q=N(raw),o=$('out');
+let list=P.filter(p=>(!fp||p.p.split('/').includes(fp))&&(!ff||p.f===ff));
+if(showSaved){const s=list.filter(p=>saved.has(p.id));o.innerHTML='<h2>Saved products</h2>'+(s.length?s.map(p=>card(p)).join(''):'<p class="sm">Nothing saved yet. Tap Save on a result.</p>');return}
+if(!q){
+if(fp||ff){o.innerHTML=`<h2>${list.length} product${list.length!=1?'s':''}</h2>`+list.slice(0,60).map(p=>card(p)).join('');return}
+o.innerHTML=`<h2>How to check</h2><ol><li>Read the brand name and manufacturer on the kit.</li><li>Type either — or the disease — above. Matching is instant, even without signal.</li><li>Save products you expect to see on this trip.</li></ol>`;return}
+const toks=raw.toLowerCase().split(/\s+/).filter(Boolean);
+const hit=list.filter(p=>toks.every(t=>p.low.includes(t)));
+hit.sort((x,y)=>toks.every(t=>x.nm.includes(t))===toks.every(t=>y.nm.includes(t))?x.nm.localeCompare(y.nm):toks.every(t=>x.nm.includes(t))?-1:1);
+let h=hit.length?`<h2>${hit.length} match${hit.length!=1?'es':''}</h2>`+hit.slice(0,60).map(p=>card(p)).join(''):`<div class="card no"><span class="st" style="background:#fff">✗ NOT FOUND on this WHO list</span><p class="sm" style="color:inherit">Check the spelling, or try just the brand or the manufacturer. If it still fails, this product is not WHO-prequalified in this snapshot — flag it for verification.</p></div>`;
+o.innerHTML=h}
+document.addEventListener('click',e=>{
+const c=e.target.closest('.chip');
+if(c){const k=c.dataset.k;if(c.parentNode.id==='c1')fp=fp===k?null:k;else ff=ff===k?null:k;showSaved=false;render();return}
+const s=e.target.closest('.sv');
+if(s){const id=s.dataset.id;saved.has(id)?saved.delete(id):saved.add(id);persist();render()}});
+$('q').addEventListener('input',()=>{showSaved=false;render()});
+$('inf').onclick=()=>{$('ip').hidden=!$('ip').hidden};
+$('svb').onclick=()=>{showSaved=!showSaved;render()};
+render();
+</script>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  });
+}
+</script>
+</body></html>
